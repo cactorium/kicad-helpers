@@ -15,6 +15,7 @@
 # make fab layer pin drawing optional
 # added TI's weird ground pad extensions
 # v0.0.5
+# added indicator marker to fab layer
 
 PARTNAME = "TI-VSON-10"
 
@@ -111,11 +112,18 @@ if indicator_circle_dia is not None:
 
 
 # draw package outline in fab layer
-x, y, nx, ny = -D1/2 - M2, -E1/2 - M2, D1/2 + M2, -E1/2 - M2
-for _ in range(0, 4):
+FC = 0.3
+fab_points = [(-D1/2 - M2 + FC, -E1/2 - M2),
+              (D1/2 + M2, -E1/2 - M2),
+              (D1/2 + M2, E1/2 + M2),
+              (-D1/2 + -M2, E1/2 + M2),
+              (-D1/2 + -M2, -E1/2 - M2 + FC)]
+ 
+nx, ny = fab_points[-1]
+for x, y in fab_points:
   print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
       format(x, y, nx, ny))
-  x, y, nx, ny = nx, ny, -x, -y
+  nx, ny = x, y
 
 if show_fab_pads:
   for i in range(num_per_edge):
