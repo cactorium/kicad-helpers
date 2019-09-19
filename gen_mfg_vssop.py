@@ -16,6 +16,7 @@
 # added TI's weird ground pad extensions
 # v0.0.5
 # added indicator marker to fab layer
+# generate better courtyards when using non-leaded packages
 
 PARTNAME = "TI-VSON-10"
 
@@ -147,26 +148,33 @@ if show_fab_pads:
         format(x_pos + L1, y_pos - b/2 - M2, x_pos, y_pos - b/2 - M2))
 
 
-# print silkscreen outline
+# print courtyard outline
 inner_x = D1/2 + M3
 outer_x = X/2 + h/2 + M3/2
 inner_y = C*(num_per_edge/2-0.5) + b/2 + M3/2
 outer_y = E1/2 + M3
-pts = [
-    (-inner_x, -outer_y),
-    (inner_x, -outer_y),
-    (inner_x, -inner_y),
-    (outer_x, -inner_y),
-    (outer_x, inner_y),
-    (inner_x, inner_y),
-    (inner_x, outer_y),
-    (-inner_x, outer_y),
-    (-inner_x, inner_y),
-    (-outer_x, inner_y),
-    (-outer_x, -inner_y),
-    (-inner_x, -inner_y)
-    ]
-nx, ny = pts[-1]
+if L1 > 0:
+  pts = [
+      (-inner_x, -outer_y),
+      (inner_x, -outer_y),
+      (inner_x, -inner_y),
+      (outer_x, -inner_y),
+      (outer_x, inner_y),
+      (inner_x, inner_y),
+      (inner_x, outer_y),
+      (-inner_x, outer_y),
+      (-inner_x, inner_y),
+      (-outer_x, inner_y),
+      (-outer_x, -inner_y),
+      (-inner_x, -inner_y)
+      ]
+else:
+  pts = [
+      (-outer_x, -outer_y),
+      (-outer_x, outer_y),
+      (outer_x, outer_y),
+      (outer_x, -outer_y)
+      ]nx, ny = pts[-1]
 for px, py in pts:
   x, y, nx, ny = nx, ny, px, py
   print("""  (fp_line (start {} {}) (end {} {}) (layer F.CrtYd) (width 0.15))""".
