@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # dual-row, TSSOP-, SOIC-, SO-style packages with ground plane
-# version 0.0.5-ti_oval
+# version 0.0.6
 
-# using diagram on page 28 of http://www.ti.com/lit/ds/symlink/tps61200.pdf
+# using diagram on page 144 of http://ww1.microchip.com/downloads/en/PackagingSpec/00000049BN%20.pdf
 
 # added solder mask parameter
 # added optional indicator circle
@@ -17,36 +17,38 @@
 # v0.0.5
 # added indicator marker to fab layer
 # generate better courtyards when using non-leaded packages
+# v0.0.6
+# added rotation setting
 
-PARTNAME = "TI-VSON-10"
+PARTNAME = "Kinetic-UTDFN-8"
 
-total_pins = 10
+total_pins = 8
 num_per_edge = total_pins // 2
 
 M1 = 0.2 # silkscreen margin
 M2 = 0.05 # fab outline margin
 M3 = 0.3 # courtyard margin
 
-Z = 2.8 + 0.6 # distance across outer edges of pads
-G = 2.8 - 0.6 # distance across inner edges of pads
+Z = 1.05 + 2*0.45 # distance across outer edges of pads
+G = 1.05 # distance across inner edges of pads
 
 X = (Z+G)/2. # distance between pad centers
-C = 0.5 # footprint pad spacing
-w = 0.24 # footprint pad width
+C = 0.40 # footprint pad spacing
+w = 0.25 # footprint pad width
 h = (Z-G)/2. # footprint pad length
 
 show_fab_pads = False
-H = 3.1 # distance from physical pad end to opposite pad end
+H = 1.50 # distance from physical pad end to opposite pad end
 e = C    # physical pad spacing, same as above
-b = 0.30 # physical pad width
-L1 = -0.5 # physical pad length
+b = 0.20 # physical pad width
+L1 = -0.175 # physical pad length
 
-D1 = 3.1 # package width
-E1 = 3.1 # package height
+D1 = 1.50 # package width
+E1 = 1.50 # package height
 
 has_ground_pad = True
-G1 = 1.65  # ground pad width
-H1 = 2.4  # ground pad height
+G1 = 0.80  # ground pad width
+H1 = 1.45  # ground pad height
 ground_pad_num = 0
 
 # NOTE: need to test with SMD footprints
@@ -55,9 +57,11 @@ ground_pad_num = 0
 solder_mask_margin = 0.05
 indicator_circle_dia = 0.3
 
-pad_radius = 0.05
+pad_radius = None
 
-add_ti_ground_extensions = True
+rotation = 270
+
+add_ti_ground_extensions = False
 ti_gnd_ext_spacing = 0.5
 ti_gnd_ext_len = (3.4 - 2.4)/2
 ti_gnd_ext_width = 0.25
@@ -69,6 +73,15 @@ if solder_mask_margin < 0.0:
   H1 -= 2.0*solder_mask_margin
 
 import math
+
+def _x(x, y):
+  return x*math.cos(rotation*math.pi/180.) - y*math.sin(rotation*math.pi/180.)
+def _y(x, y):
+  return x*math.sin(rotation*math.pi/180.) + y*math.cos(rotation*math.pi/180.)
+def xy(x, y):
+  return (_x(x, y), _y(x, y))
+def xyxy(x1, y1, x2, y2):
+  return (_x(x1, y1), _y(x1, y1), _x(x2, y2), _y(x2, y2))
 
 import time
 gen_time = hex(int(time.time()))[2:].upper()
@@ -102,14 +115,14 @@ for x, y, nx, ny in [
     (x, inner_edge, x, y), (x, y, -x, y),
     (-x, y, -x, inner_edge)]:
   print("""  (fp_line (start {} {}) (end {} {}) (layer F.SilkS) (width 0.15))""".
-      format(x, y, nx, ny))
+      format(*xyxy(x, y, nx, ny)))
 
 if indicator_circle_dia is not None:
   x = X/2
   y = E1/2 + M1 + 0.75*indicator_circle_dia
   # add indicator circle
   print("""  (fp_circle (center {} {}) (end {} {}) (layer F.SilkS) (width 0.15))""".
-      format(-x, -y - indicator_circle_dia/2., -x, -y))
+      format(*xyxy(-x, -y - indicator_circle_dia/2., -x, -y)))
 
 
 # draw package outline in fab layer
@@ -123,7 +136,7 @@ fab_points = [(-D1/2 - M2 + FC, -E1/2 - M2),
 nx, ny = fab_points[-1]
 for x, y in fab_points:
   print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-      format(x, y, nx, ny))
+      format(*xyxy(x, y, nx, ny)))
   nx, ny = x, y
 
 if show_fab_pads:
@@ -131,21 +144,21 @@ if show_fab_pads:
     x_pos = -D1/2 - M2
     y_pos = C*(i-(num_per_edge/2-0.5))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos, y_pos - b/2 - M2, x_pos - L1, y_pos - b/2 - M2))
+        format(*xyxy(x_pos, y_pos - b/2 - M2, x_pos - L1, y_pos - b/2 - M2)))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos - L1, y_pos - b/2 - M2, x_pos - L1, y_pos + b/2 + M2))
+        format(*xyxy(x_pos - L1, y_pos - b/2 - M2, x_pos - L1, y_pos + b/2 + M2)))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos - L1, y_pos + b/2 + M2, x_pos, y_pos + b/2 + M2))
+        format(*xyxy(x_pos - L1, y_pos + b/2 + M2, x_pos, y_pos + b/2 + M2)))
 
   for i in range(num_per_edge):
     x_pos = D1/2 + M2
     y_pos = -C*(i-(num_per_edge/2-0.5))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos, y_pos + b/2 + M2, x_pos + L1, y_pos + b/2 + M2))
+        format(*xyxy(x_pos, y_pos + b/2 + M2, x_pos + L1, y_pos + b/2 + M2)))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos + L1, y_pos + b/2 + M2, x_pos + L1, y_pos - b/2 - M2))
+        format(*xyxy(x_pos + L1, y_pos + b/2 + M2, x_pos + L1, y_pos - b/2 - M2)))
     print("""  (fp_line (start {} {}) (end {} {}) (layer F.Fab) (width 0.15))""".
-        format(x_pos + L1, y_pos - b/2 - M2, x_pos, y_pos - b/2 - M2))
+        format(*xyxy(x_pos + L1, y_pos - b/2 - M2, x_pos, y_pos - b/2 - M2)))
 
 
 # print courtyard outline
@@ -174,21 +187,29 @@ else:
       (-outer_x, outer_y),
       (outer_x, outer_y),
       (outer_x, -outer_y)
-      ]nx, ny = pts[-1]
+      ]
+
+nx, ny = pts[-1]
 for px, py in pts:
   x, y, nx, ny = nx, ny, px, py
   print("""  (fp_line (start {} {}) (end {} {}) (layer F.CrtYd) (width 0.15))""".
-      format(x, y, nx, ny))
+      format(*xyxy(x, y, nx, ny)))
 
+
+if rotation == 90 or rotation == 270:
+  h, w = w, h
+  H1, G1 = G1, H1
+  ti_gnd_ext_width, ti_gnd_ext_len = ti_gnd_ext_len, ti_gnd_ext_width
 
 for i in range(0, num_per_edge):
+  tx, ty = xy(-X/2, C*(i-(num_per_edge/2-0.5)))
   if pad_radius is None:
     print("""  (pad {} smd rect (at {} {}) (size {} {}) (layers F.Cu F.Paste F.Mask)
       (solder_mask_margin {}))""".
           format(
               i+1,
-              -X/2,
-              C*(i-(num_per_edge/2-0.5)),
+              tx,
+              ty,
               h,
               w,
               solder_mask_margin))
@@ -197,21 +218,22 @@ for i in range(0, num_per_edge):
       (roundrect_rratio {}) (solder_mask_margin {}))""".
           format(
               i+1,
-              -X/2,
-              C*(i-(num_per_edge/2-0.5)),
+              tx,
+              ty,
               h,
               w,
               pad_radius/min(h, w),
               solder_mask_margin))
 
 for i in range(0, num_per_edge):
+  tx, ty = xy(X/2, -C*(i-(num_per_edge/2-0.5)))
   if pad_radius is None:
     print("""  (pad {} smd rect (at {} {}) (size {} {}) (layers F.Cu F.Paste F.Mask)
       (solder_mask_margin {}))""".
           format(
               i+1+1*num_per_edge,
-              X/2,
-              -C*(i-(num_per_edge/2-0.5)),
+              tx,
+              ty,
               h,
               w,
               solder_mask_margin))
@@ -220,8 +242,8 @@ for i in range(0, num_per_edge):
       (roundrect_rratio {}) (solder_mask_margin {}))""".
           format(
               i+1+1*num_per_edge,
-              X/2,
-              -C*(i-(num_per_edge/2-0.5)),
+              tx,
+              ty,
               h,
               w,
               pad_radius/min(h, w),
@@ -256,13 +278,14 @@ if has_ground_pad:
 if add_ti_ground_extensions:
   for i in [-1, 1]:
     for j in [-1, 1]:
+      tx, ty = xy(i*ti_gnd_ext_spacing/2, j*(H1 + ti_gnd_ext_len)/2.)
       print("""  (pad {} smd {} (at {} {}) (size {} {}) (layers F.Cu F.Paste F.Mask)
         (solder_mask_margin {}))""".
             format(
                 ground_pad_num,
                 "rect",
-                i*ti_gnd_ext_spacing/2,
-                j*(H1 + ti_gnd_ext_len)/2.,
+                tx,
+                ty,
                 ti_gnd_ext_width,
                 ti_gnd_ext_len,
                 solder_mask_margin))
