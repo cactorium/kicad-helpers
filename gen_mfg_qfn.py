@@ -55,7 +55,7 @@ ground_pad_num = 0
 # NOTE: need to test with SMD footprints
 # need to make sure pad size adjustment works
 # nsmd = positive
-solder_mask_margin = 0.05
+solder_mask_margin = 0.10
 indicator_circle_dia = 0.3
 
 pad_radius = 0.05
