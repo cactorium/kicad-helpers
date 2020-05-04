@@ -1,3 +1,4 @@
+# use bom2grouped_csv to generate input BOM file
 import argparse
 import csv
 
