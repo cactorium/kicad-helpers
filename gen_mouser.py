@@ -19,9 +19,9 @@ def main():
     reader = csv.reader(f)
     parts = next(reader)
     for i, part in enumerate(parts):
-      if 'Mouser' == part:
+      if 'Mouser' == part.strip():
         mouser_idx = i
-      elif 'Quantity' == part:
+      elif 'Quantity' == part.strip():
         count_idx = i
 
     if mouser_idx is None or count_idx is None:
